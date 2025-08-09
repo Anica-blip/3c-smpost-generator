@@ -121,6 +121,23 @@ class SocialMediaGenerator {
         return `${baseUrl}?${params.toString()}`;
     }
 
+    // NEW: Generate Interactive Post URL
+    generateInteractivePostURL() {
+        const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '') + 'embed.html';
+        const params = new URLSearchParams();
+        
+        // Add parameters for interactive post
+        params.set('embedded', '1');
+        params.set('type', this.contentType.value);
+        params.set('title', encodeURIComponent(this.title.value));
+        params.set('desc', encodeURIComponent(this.description.value));
+        params.set('linkType', this.linkType.value);
+        params.set('url', encodeURIComponent(this.linkUrl.value));
+        params.set('size', this.imageSize.value);
+        
+        return `${baseUrl}?${params.toString()}`;
+    }
+
     async sharePost() {
         const shareUrl = this.generateShareableURL();
         
@@ -150,6 +167,40 @@ class SocialMediaGenerator {
         console.log('🔗 Shareable URL:', shareUrl);
     }
 
+    // NEW: Forward as Interactive Post
+    async forwardInteractivePost() {
+        const interactiveUrl = this.generateInteractivePostURL();
+        
+        // Copy to clipboard
+        try {
+            await navigator.clipboard.writeText(interactiveUrl);
+            
+            // Show success message
+            const originalText = this.forwardBtn.textContent;
+            this.forwardBtn.textContent = 'Interactive URL Copied! ✓';
+            this.forwardBtn.style.background = '#4CAF50';
+            
+            setTimeout(() => {
+                this.forwardBtn.textContent = originalText;
+                this.forwardBtn.style.background = '#ff6b6b';
+            }, 3000);
+            
+            console.log('📋 Interactive post URL copied to clipboard:', interactiveUrl);
+            
+            // Also open a preview
+            window.open(interactiveUrl, '_blank', 'width=800,height=800');
+            
+        } catch (err) {
+            // Fallback: Show URL in prompt for manual copying
+            const userCopy = prompt('Copy this interactive post URL:', interactiveUrl);
+            console.log('📋 Interactive post URL generated:', interactiveUrl);
+        }
+        
+        console.log('🎨 Interactive Post URL:', interactiveUrl);
+        console.log('💡 This URL displays your post as an interactive image with working button!');
+        console.log('🔗 Use this URL in your dashboard at: https://threadcommand.center/dashboard/content');
+    }
+
     initializeElements() {
         this.contentType = document.getElementById('contentType');
         this.title = document.getElementById('title');
@@ -160,6 +211,7 @@ class SocialMediaGenerator {
         this.generateBtn = document.getElementById('generatePost');
         this.downloadBtn = document.getElementById('downloadPost');
         this.shareBtn = document.getElementById('sharePost');
+        this.forwardBtn = document.getElementById('forwardPost'); // NEW
         this.generateDescBtn = document.getElementById('generateDesc');
         this.themeStatus = document.getElementById('themeStatus');
     }
@@ -238,6 +290,11 @@ class SocialMediaGenerator {
         
         // Share post URL
         this.shareBtn.addEventListener('click', () => this.sharePost());
+        
+        // NEW: Forward as Interactive Post
+        if (this.forwardBtn) {
+            this.forwardBtn.addEventListener('click', () => this.forwardInteractivePost());
+        }
         
         // Canvas click handler for button
         this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
@@ -742,3 +799,4 @@ class SocialMediaGenerator {
 document.addEventListener('DOMContentLoaded', () => {
     new SocialMediaGenerator();
 });
+
