@@ -4,13 +4,150 @@ class SocialMediaGenerator {
     constructor() {
         this.canvas = document.getElementById('previewCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.backgroundImage = null;
+        this.backgroundImages = {}; // Store multiple background images
         this.logoImage = null;
+        this.currentBackgroundImage = null;
         
         this.initializeElements();
+        this.loadURLParameters(); // Load shared post data
         this.loadAssets();
         this.bindEvents();
         this.initializeCanvas();
+    }
+
+    updateBackgroundForTheme() {
+        const contentType = this.contentType.value.toLowerCase();
+        
+        // Try to get theme-specific background
+        if (this.backgroundImages[contentType]) {
+            this.currentBackgroundImage = this.backgroundImages[contentType];
+            console.log(`✓ Using ${contentType}-bg.png`);
+        } else if (this.backgroundImages['default']) {
+            this.currentBackgroundImage = this.backgroundImages['default'];
+            console.log('✓ Using default background (7.png)');
+        } else {
+            this.currentBackgroundImage = null;
+            console.log('⚠ No background images available, using gradient');
+        }
+    }
+
+    updateThemeStatus() {
+        if (!this.themeStatus) return;
+        
+        const contentType = this.contentType.value.toLowerCase();
+        const loadedThemes = Object.keys(this.backgroundImages).filter(key => key !== 'default');
+        
+        if (this.backgroundImages[contentType]) {
+            this.themeStatus.textContent = `✓ Using ${contentType} theme background`;
+            this.themeStatus.style.color = '#4CAF50';
+        } else if (this.backgroundImages['default']) {
+            this.themeStatus.textContent = `Using default background (add ${contentType}-bg.png for theme)`;
+            this.themeStatus.style.color = '#FFC107';
+        } else {
+            this.themeStatus.textContent = 'No background images found - using gradient';
+            this.themeStatus.style.color = '#FF9800';
+        }
+        
+        console.log(`Loaded themes: ${loadedThemes.join(', ')}`);
+    }
+
+    loadURLParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check if this is a shared post
+        if (urlParams.has('shared')) {
+            console.log('📤 Loading shared post...');
+            
+            // Load all parameters
+            const contentType = urlParams.get('type') || 'Quiz';
+            const title = urlParams.get('title') || '';
+            const description = urlParams.get('desc') || '';
+            const linkType = urlParams.get('linkType') || 'landing';
+            const linkUrl = urlParams.get('url') || '';
+            const imageSize = urlParams.get('size') || 'instagram-square';
+            
+            // Populate form fields
+            this.contentType.value = contentType;
+            this.title.value = decodeURIComponent(title);
+            this.description.value = decodeURIComponent(description);
+            this.linkType.value = linkType;
+            this.linkUrl.value = decodeURIComponent(linkUrl);
+            this.imageSize.value = imageSize;
+            
+            console.log('✅ Shared post loaded successfully');
+            
+            // Show shared post indicator
+            this.showSharedPostNotification();
+        }
+    }
+
+    showSharedPostNotification() {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'shared-post-notification';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-icon">🔗</span>
+                <span class="notification-text">Viewing shared post</span>
+                <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+        `;
+        
+        // Insert at top of container
+        const container = document.querySelector('.container');
+        container.insertBefore(notification, container.firstChild);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    generateShareableURL() {
+        const baseUrl = window.location.origin + window.location.pathname;
+        const params = new URLSearchParams();
+        
+        // Add all current form values
+        params.set('shared', '1');
+        params.set('type', this.contentType.value);
+        params.set('title', encodeURIComponent(this.title.value));
+        params.set('desc', encodeURIComponent(this.description.value));
+        params.set('linkType', this.linkType.value);
+        params.set('url', encodeURIComponent(this.linkUrl.value));
+        params.set('size', this.imageSize.value);
+        
+        return `${baseUrl}?${params.toString()}`;
+    }
+
+    async sharePost() {
+        const shareUrl = this.generateShareableURL();
+        
+        // Copy to clipboard
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            
+            // Show success message
+            const originalText = this.shareBtn.textContent;
+            this.shareBtn.textContent = 'URL Copied! ✓';
+            this.shareBtn.style.background = '#4CAF50';
+            
+            setTimeout(() => {
+                this.shareBtn.textContent = originalText;
+                this.shareBtn.style.background = '#61d8e6';
+            }, 3000);
+            
+            console.log('📋 Share URL copied to clipboard:', shareUrl);
+            
+        } catch (err) {
+            // Fallback: Show URL in prompt for manual copying
+            const userCopy = prompt('Copy this shareable URL:', shareUrl);
+            console.log('📋 Share URL generated:', shareUrl);
+        }
+        
+        // Also show the URL in console for easy access
+        console.log('🔗 Shareable URL:', shareUrl);
     }
 
     initializeElements() {
@@ -22,19 +159,41 @@ class SocialMediaGenerator {
         this.imageSize = document.getElementById('imageSize');
         this.generateBtn = document.getElementById('generatePost');
         this.downloadBtn = document.getElementById('downloadPost');
+        this.shareBtn = document.getElementById('sharePost');
         this.generateDescBtn = document.getElementById('generateDesc');
+        this.themeStatus = document.getElementById('themeStatus');
     }
 
     async loadAssets() {
         try {
-            // Load background image
-            this.backgroundImage = await this.loadImage('./assets/7.png');
-            
-            // Load logo
+            // Load logo first
             this.logoImage = await this.loadImage('./assets/logo.png');
             
-            console.log('Assets loaded successfully');
+            // Define theme background images
+            const themes = ['quiz', 'game', 'puzzle', 'challenge', 'assessment', 'workshop', 'course', 'tool'];
+            
+            // Load all theme backgrounds
+            for (const theme of themes) {
+                try {
+                    this.backgroundImages[theme] = await this.loadImage(`./assets/${theme}-bg.png`);
+                    console.log(`✓ Loaded ${theme}-bg.png`);
+                } catch (error) {
+                    console.warn(`⚠ Could not load ${theme}-bg.png, will use fallback`);
+                }
+            }
+            
+            // Load default fallback background
+            try {
+                this.backgroundImages['default'] = await this.loadImage('./assets/7.png');
+                console.log('✓ Loaded default background (7.png)');
+            } catch (error) {
+                console.warn('⚠ Could not load default background');
+            }
+            
+            console.log('Assets loading completed');
+            this.updateBackgroundForTheme(); // Set initial background
             this.updatePreview(); // Refresh preview once images load
+            this.updateThemeStatus(); // Update status display
         } catch (error) {
             console.warn('Some assets failed to load:', error);
             // Continue without assets - will use fallback colors
@@ -58,6 +217,13 @@ class SocialMediaGenerator {
             element.addEventListener('change', () => this.updatePreview());
         });
 
+        // Content type change handler - update background
+        this.contentType.addEventListener('change', () => {
+            this.updateBackgroundForTheme();
+            this.updateThemeStatus();
+            this.updatePreview();
+        });
+
         // Link type change handler
         this.linkType.addEventListener('change', () => this.handleLinkTypeChange());
 
@@ -69,6 +235,9 @@ class SocialMediaGenerator {
 
         // Download post
         this.downloadBtn.addEventListener('click', () => this.downloadImage());
+        
+        // Share post URL
+        this.shareBtn.addEventListener('click', () => this.sharePost());
         
         // Canvas click handler for button
         this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
@@ -191,15 +360,15 @@ class SocialMediaGenerator {
         const ctx = this.ctx;
         const canvas = this.canvas;
         
-        if (this.backgroundImage) {
-            // Draw the loaded background image
-            ctx.drawImage(this.backgroundImage, 0, 0, canvas.width, canvas.height);
+        if (this.currentBackgroundImage) {
+            // Draw the theme-specific background image
+            ctx.drawImage(this.currentBackgroundImage, 0, 0, canvas.width, canvas.height);
             
-            // Add overlay for better text visibility
+            // Add subtle overlay for better text visibility
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, 'rgba(35, 13, 58, 0.8)');
-            gradient.addColorStop(0.5, 'rgba(74, 26, 92, 0.6)');
-            gradient.addColorStop(1, 'rgba(45, 14, 64, 0.8)');
+            gradient.addColorStop(0, 'rgba(35, 13, 58, 0.3)');
+            gradient.addColorStop(0.5, 'rgba(74, 26, 92, 0.2)');
+            gradient.addColorStop(1, 'rgba(45, 14, 64, 0.3)');
             
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -415,19 +584,15 @@ class SocialMediaGenerator {
     drawContactInfo(x, y, fontSize) {
         const ctx = this.ctx;
         
+        ctx.fillStyle = '#61d8e6';
+        ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         
-        // Brand name in navy
         const line1 = '3C Thread To Success';
-        ctx.fillStyle = '#997a64';
-        ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
-        ctx.fillText(line1, x, y);
-        
-        // Contact info in cyan
         const line2 = 'www.3c-innergrowth.com | 3c.innertherapy@gmail.com';
-        ctx.fillStyle = '#61d8e6';
-        ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
+        
+        ctx.fillText(line1, x, y);
         ctx.fillText(line2, x, y + fontSize * 1.5);
     }
 
@@ -564,6 +729,12 @@ class SocialMediaGenerator {
         
         // Open in new tab
         window.open(url, '_blank');
+        
+        // Track click for shared posts
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('shared')) {
+            console.log('🎯 Shared post button clicked - redirecting to:', url);
+        }
     }
 }
 
@@ -571,4 +742,3 @@ class SocialMediaGenerator {
 document.addEventListener('DOMContentLoaded', () => {
     new SocialMediaGenerator();
 });
-
