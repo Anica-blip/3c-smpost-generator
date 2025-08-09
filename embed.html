@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3C Interactive Post</title>
+    <link href="https://fonts.googleapis.com/css2?family=Livvic:wght@700&family=Inter:wght@700&family=Arimo:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+        
+        .post-container {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        
+        #interactiveCanvas {
+            display: block;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        #interactiveCanvas:hover {
+            transform: scale(1.02);
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            background: rgba(255,107,107,0.1);
+            border: 1px solid #ff6b6b;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="post-container">
+        <div class="loading" id="loading">
+            <div>Loading your interactive post...</div>
+            <div style="font-size: 12px; margin-top: 10px;">Please wait</div>
+        </div>
+        <canvas id="interactiveCanvas" style="display: none;"></canvas>
+        <div class="error" id="error" style="display: none;">
+            <h3>Unable to load post</h3>
+            <p>Please check the shared URL parameters</p>
+        </div>
+    </div>
+
+    <script>
+        class InteractivePostViewer {
+            constructor() {
+                this.canvas = document.getElementById('interactiveCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.loading = document.getElementById('loading');
+                this.error = document.getElementById('error');
+                this.backgroundImages = {};
+                this.logoImage = null;
+                this.currentBackgroundImage = null;
+                this.buttonBounds = null;
+                
+                this.postData = this.loadPostData();
+                if (this.postData) {
+                    this.init();
+                } else {
+                    this.showError();
+                }
+            }
+            
+            loadPostData() {
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                if (!urlParams.has('embedded') || !urlParams.has('type')) {
+                    return null;
+                }
+                
+                return {
+                    contentType: urlParams.get('type') || 'Quiz',
+                    title: decodeURIComponent(urlParams.get('title') || ''),
+                    description: decodeURIComponent(urlParams.get('desc') || ''),
+                    linkType: urlParams.get('linkType') || 'landing',
+                    linkUrl: decodeURIComponent(urlParams.get('url') || ''),
+                    imageSize: urlParams.get('size') || 'instagram-square'
+                };
+            }
+            
+            async init() {
+                try {
+                    await this.loadAssets();
+                    this.setupCanvas();
+                    this.drawPost();
+                    this.bindEvents();
+                    this.hideLoading();
+                } catch (error) {
+                    console.error('Failed to initialize:', error);
+                    this.showError();
+                }
+            }
+            
+            async loadAssets() {
+                try {
+                    // Load logo
+                    this.logoImage = await this.loadImage('./assets/logo.png');
+                    
+                    // Load theme-specific background
+                    const contentType = this.postData.contentType.toLowerCase();
+                    try {
+                        this.currentBackgroundImage = await this.loadImage(`./assets/${contentType}-bg.png`);
+                    } catch {
+                        try {
+                            this.currentBackgroundImage = await this.loadImage('./assets/7.png');
+                        } catch {
+                            this.currentBackgroundImage = null;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Some assets failed to load, using fallbacks');
+                }
+            }
+            
+            loadImage(src) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = src;
+                });
+            }
+            
+            setupCanvas() {
+                const dimensions = this.getSizeDimensions(this.postData.imageSize);
+                this.canvas.width = dimensions.width;
+                this.canvas.height = dimensions.height;
+                
+                // Scale canvas to fit container while maintaining aspect ratio
+                const maxWidth = Math.min(window.innerWidth - 40, 600);
+                const maxHeight = Math.min(window.innerHeight - 40, 600);
+                const scale = Math.min(maxWidth / dimensions.width, maxHeight / dimensions.height);
+                
+                this.canvas.style.width = `${dimensions.width * scale}px`;
+                this.canvas.style.height = `${dimensions.height * scale}px`;
+            }
+            
+            getSizeDimensions(size) {
+                const dimensions = {
+                    'instagram-square': { width: 1080, height: 1080 },
+                    'instagram-story': { width: 1080, height: 1920 },
+                    'facebook-post': { width: 1200, height: 630 },
+                    'twitter-post': { width: 1200, height: 675 },
+                    'linkedin-post': { width: 1200, height: 627 }
+                };
+                
+                return dimensions[size] || dimensions['instagram-square'];
+            }
+            
+            drawPost() {
+                const ctx = this.ctx;
+                const canvas = this.canvas;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw background
+                this.drawBackground();
+                
+                // Draw content
+                this.drawContent();
+            }
+            
+            drawBackground() {
+                const ctx = this.ctx;
+                const canvas = this.canvas;
+                
+                if (this.currentBackgroundImage) {
+                    ctx.drawImage(this.currentBackgroundImage, 0, 0, canvas.width, canvas.height);
+                    
+                    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, 'rgba(35, 13, 58, 0.3)');
+                    gradient.addColorStop(0.5, 'rgba(74, 26, 92, 0.2)');
+                    gradient.addColorStop(1, 'rgba(45, 14, 64, 0.3)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                } else {
+                    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, '#230d3a');
+                    gradient.addColorStop(0.5, '#4a1a5c');
+                    gradient.addColorStop(1, '#2d0e40');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            
+            drawContent() {
+                const canvas = this.canvas;
+                const isSquare = canvas.width === canvas.height;
+                const isStory = canvas.height > canvas.width;
+                
+                let logoSize, logoY, contentTypeY, titleY, descY, buttonY, contactY;
+                let titleFontSize, descFontSize, contentTypeFontSize;
+                
+                if (isStory) {
+                    logoSize = canvas.width * 0.15;
+                    logoY = canvas.height * 0.1;
+                    contentTypeY = logoY + logoSize + (canvas.height * 0.08);
+                    titleY = contentTypeY + (canvas.height * 0.1);
+                    descY = titleY + (canvas.height * 0.25);
+                    buttonY = canvas.height * 0.75;
+                    contactY = canvas.height * 0.85;
+                    
+                    titleFontSize = Math.floor(canvas.width * 0.06);
+                    descFontSize = Math.floor(canvas.width * 0.035);
+                    contentTypeFontSize = Math.floor(canvas.width * 0.04);
+                } else if (isSquare) {
+                    logoSize = canvas.width * 0.12;
+                    logoY = canvas.height * 0.08;
+                    contentTypeY = logoY + logoSize + (canvas.height * 0.06);
+                    titleY = contentTypeY + (canvas.height * 0.08);
+                    descY = titleY + (canvas.height * 0.2);
+                    buttonY = canvas.height * 0.72;
+                    contactY = canvas.height * 0.85;
+                    
+                    titleFontSize = Math.floor(canvas.width * 0.05);
+                    descFontSize = Math.floor(canvas.width * 0.032);
+                    contentTypeFontSize = Math.floor(canvas.width * 0.035);
+                } else {
+                    logoSize = canvas.height * 0.2;
+                    logoY = canvas.height * 0.1;
+                    contentTypeY = logoY + logoSize + (canvas.height * 0.05);
+                    titleY = contentTypeY + (canvas.height * 0.08);
+                    descY = titleY + (canvas.height * 0.2);
+                    buttonY = canvas.height * 0.75;
+                    contactY = canvas.height * 0.9;
+                    
+                    titleFontSize = Math.floor(canvas.height * 0.08);
+                    descFontSize = Math.floor(canvas.height * 0.045);
+                    contentTypeFontSize = Math.floor(canvas.height * 0.05);
+                }
+                
+                this.drawLogo(canvas.width / 2, logoY, logoSize);
+                this.drawContentType(canvas.width / 2, contentTypeY, contentTypeFontSize);
+                this.drawTitle(canvas.width / 2, titleY, titleFontSize, canvas.width * 0.85);
+                this.drawDescription(canvas.width / 2, descY, descFontSize, canvas.width * 0.85);
+                this.drawButton(canvas.width / 2, buttonY, canvas.width * 0.4);
+                this.drawContactInfo(canvas.width / 2, contactY, Math.floor(canvas.width * 0.025));
+            }
+            
+            drawLogo(x, y, size) {
+                const ctx = this.ctx;
+                
+                if (this.logoImage) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(x, y, size / 2, 0, 2 * Math.PI);
+                    ctx.clip();
+                    ctx.drawImage(this.logoImage, x - size / 2, y - size / 2, size, size);
+                    ctx.restore();
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, size / 2, 0, 2 * Math.PI);
+                    ctx.strokeStyle = '#997a64';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(x, y, size / 2, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#997a64';
+                    ctx.fill();
+                    ctx.strokeStyle = '#997a64';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = `bold ${size * 0.3}px Livvic, Arial, sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('3C', x, y);
+                }
+            }
+            
+            drawContentType(x, y, fontSize) {
+                const ctx = this.ctx;
+                
+                ctx.fillStyle = '#61d8e6';
+                ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.postData.contentType.toUpperCase(), x, y);
+            }
+            
+            drawTitle(x, y, fontSize, maxWidth) {
+                const ctx = this.ctx;
+                const title = this.postData.title || 'Your Amazing Title Here';
+                
+                ctx.fillStyle = '#a49079';
+                ctx.font = `bold ${fontSize}px Arimo, Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                
+                ctx.shadowColor = '#a49079';
+                ctx.shadowBlur = 20;
+                
+                this.wrapText(ctx, title, x, y, maxWidth, fontSize * 1.2);
+                
+                ctx.shadowBlur = 0;
+            }
+            
+            drawDescription(x, y, fontSize, maxWidth) {
+                const ctx = this.ctx;
+                const description = this.postData.description || 'Discover something amazing about yourself with this interactive experience designed just for you!';
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                
+                this.wrapText(ctx, description, x, y, maxWidth, fontSize * 1.4);
+            }
+            
+            drawButton(x, y, width) {
+                const ctx = this.ctx;
+                const height = width * 0.2;
+                const radius = height / 2;
+                
+                ctx.fillStyle = '#997a64';
+                ctx.beginPath();
+                ctx.roundRect(x - width / 2, y - height / 2, width, height, radius);
+                ctx.fill();
+                
+                ctx.shadowColor = 'rgba(153, 122, 100, 0.5)';
+                ctx.shadowBlur = 15;
+                ctx.shadowOffsetY = 5;
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetY = 0;
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `bold ${height * 0.4}px Inter, Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('GO IN', x, y);
+                
+                this.buttonBounds = {
+                    x: x - width / 2,
+                    y: y - height / 2,
+                    width: width,
+                    height: height
+                };
+            }
+            
+            drawContactInfo(x, y, fontSize) {
+                const ctx = this.ctx;
+                
+                ctx.fillStyle = '#61d8e6';
+                ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                
+                const line1 = '3C Thread To Success';
+                const line2 = 'www.3c-innergrowth.com | 3c.innertherapy@gmail.com';
+                
+                ctx.fillText(line1, x, y);
+                ctx.fillText(line2, x, y + fontSize * 1.5);
+            }
+            
+            wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+                const words = text.split(' ');
+                let line = '';
+                let currentY = y;
+                
+                for (let n = 0; n < words.length; n++) {
+                    const testLine = line + words[n] + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    const testWidth = metrics.width;
+                    
+                    if (testWidth > maxWidth && n > 0) {
+                        ctx.fillText(line, x, currentY);
+                        line = words[n] + ' ';
+                        currentY += lineHeight;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                ctx.fillText(line, x, currentY);
+            }
+            
+            bindEvents() {
+                this.canvas.addEventListener('click', (e) => this.handleClick(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleHover(e));
+            }
+            
+            handleClick(e) {
+                if (!this.buttonBounds) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+                
+                if (x >= this.buttonBounds.x && 
+                    x <= this.buttonBounds.x + this.buttonBounds.width &&
+                    y >= this.buttonBounds.y && 
+                    y <= this.buttonBounds.y + this.buttonBounds.height) {
+                    
+                    this.openLink();
+                }
+            }
+            
+            handleHover(e) {
+                if (!this.buttonBounds) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+                
+                if (x >= this.buttonBounds.x && 
+                    x <= this.buttonBounds.x + this.buttonBounds.width &&
+                    y >= this.buttonBounds.y && 
+                    y <= this.buttonBounds.y + this.buttonBounds.height) {
+                    
+                    this.canvas.style.cursor = 'pointer';
+                } else {
+                    this.canvas.style.cursor = 'default';
+                }
+            }
+            
+            openLink() {
+                let url = this.postData.linkUrl;
+                
+                if (!url) {
+                    const linkType = this.postData.linkType;
+                    switch (linkType) {
+                        case 'landing':
+                            url = 'https://anica-blip.github.io/3c-quiz-admin/landing.html?quiz=quiz.01';
+                            break;
+                        case 'canva':
+                            url = 'https://canva.com';
+                            break;
+                        case 'notion':
+                            url = 'https://notion.so';
+                            break;
+                        default:
+                            url = 'https://www.3c-innergrowth.com';
+                    }
+                }
+                
+                // Add visual feedback
+                this.canvas.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.canvas.style.transform = 'scale(1)';
+                }, 150);
+                
+                // Open link
+                window.open(url, '_blank');
+                
+                // Track interaction
+                console.log('🎯 Interactive post button clicked - redirecting to:', url);
+            }
+            
+            hideLoading() {
+                this.loading.style.display = 'none';
+                this.canvas.style.display = 'block';
+            }
+            
+            showError() {
+                this.loading.style.display = 'none';
+                this.error.style.display = 'block';
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new InteractivePostViewer();
+        });
+    </script>
+</body>
+</html>
