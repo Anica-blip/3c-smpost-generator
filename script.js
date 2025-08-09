@@ -462,4 +462,26 @@ class SocialMediaGenerator {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.download = filename;
-            link.
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            // Show success message
+            const originalText = this.downloadBtn.textContent;
+            this.downloadBtn.textContent = 'Downloaded! ✓';
+            this.downloadBtn.style.background = '#4CAF50';
+            
+            setTimeout(() => {
+                this.downloadBtn.textContent = originalText;
+                this.downloadBtn.style.background = 'rgba(97, 216, 230, 0.2)';
+            }, 2000);
+        });
+    }
+}
+
+// Initialize the generator when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    new SocialMediaGenerator();
+});
