@@ -31,8 +31,8 @@ body {
     font-family: 'Livvic', sans-serif;
     font-size: 2.5rem;
     font-weight: 700;
-    color: #997a64;
-    text-shadow: 0 0 20px #997a64;
+    color: #061244;
+    text-shadow: 0 0 20px #061244;
     margin-bottom: 10px;
 }
 
@@ -113,13 +113,14 @@ body {
 /* Buttons */
 .form-actions {
     display: flex;
-    gap: 15px;
+    gap: 10px;
     margin-top: 30px;
+    flex-wrap: wrap;
 }
 
 .btn-primary,
 .btn-secondary {
-    padding: 15px 25px;
+    padding: 15px 20px;
     border: none;
     border-radius: 25px;
     font-weight: 700;
@@ -127,6 +128,7 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     flex: 1;
+    min-width: 140px;
 }
 
 .btn-primary {
@@ -150,6 +152,18 @@ body {
 .btn-secondary:hover:not(:disabled) {
     background: rgba(97, 216, 230, 0.3);
     transform: translateY(-2px);
+}
+
+#sharePost {
+    background: #61d8e6;
+    color: #ffffff;
+    border: none;
+}
+
+#sharePost:hover:not(:disabled) {
+    background: #4fc3d7;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(97, 216, 230, 0.3);
 }
 
 .btn-primary:disabled,
@@ -230,6 +244,63 @@ body {
     
     .form-actions {
         flex-direction: column;
+    }
+}
+
+/* Shared Post Notification */
+.shared-post-notification {
+    background: rgba(97, 216, 230, 0.1);
+    border: 2px solid #61d8e6;
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 20px;
+    animation: slideIn 0.5s ease-out;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-icon {
+    font-size: 1.2rem;
+}
+
+.notification-text {
+    flex: 1;
+    color: #61d8e6;
+    font-weight: 700;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: #61d8e6;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+}
+
+.notification-close:hover {
+    background: rgba(97, 216, 230, 0.2);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
