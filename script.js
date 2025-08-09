@@ -415,15 +415,19 @@ class SocialMediaGenerator {
     drawContactInfo(x, y, fontSize) {
         const ctx = this.ctx;
         
-        ctx.fillStyle = '#61d8e6';
-        ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         
+        // Brand name in navy
         const line1 = '3C Thread To Success';
-        const line2 = 'www.3c-innergrowth.com | 3c.innertherapy@gmail.com';
-        
+        ctx.fillStyle = '#061244';
+        ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
         ctx.fillText(line1, x, y);
+        
+        // Contact info in cyan
+        const line2 = 'www.3c-innergrowth.com | 3c.innertherapy@gmail.com';
+        ctx.fillStyle = '#61d8e6';
+        ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
         ctx.fillText(line2, x, y + fontSize * 1.5);
     }
 
