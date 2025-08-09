@@ -6,6 +6,117 @@
     <title>3C Social Media Post Generator</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Livvic:wght@700&family=Inter:wght@700&family=Arimo:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Additional styles for the new button */
+        .btn-forward {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-forward:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-forward:active {
+            transform: translateY(0);
+        }
+        
+        .form-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .form-actions .btn-primary {
+            grid-column: 1 / -1;
+        }
+        
+        /* Notification styles */
+        .shared-post-notification {
+            background: linear-gradient(135deg, #61d8e6, #4ecdc4);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            animation: slideInFromTop 0.5s ease-out;
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .notification-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        
+        .notification-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .notification-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Interactive post info box */
+        .interactive-info {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(238, 90, 111, 0.1));
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .interactive-info h4 {
+            margin: 0 0 8px 0;
+            color: #ff6b6b;
+            font-size: 14px;
+        }
+        
+        .interactive-info ul {
+            margin: 8px 0 0 20px;
+            padding: 0;
+        }
+        
+        .interactive-info li {
+            margin: 4px 0;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -73,7 +184,19 @@
                 <div class="form-actions">
                     <button type="button" id="generatePost" class="btn-primary">Generate Post</button>
                     <button type="button" id="sharePost" class="btn-secondary">Share URL</button>
+                    <button type="button" id="forwardPost" class="btn-forward">📤 Forward as Interactive Post</button>
                     <button type="button" id="downloadPost" class="btn-secondary" disabled>Download Image</button>
+                </div>
+                
+                <div class="interactive-info">
+                    <h4>🎨 What's "Forward as Interactive Post"?</h4>
+                    <p>This creates a special URL that displays your post as an interactive image with a working button!</p>
+                    <ul>
+                        <li>✅ Perfect for your dashboard at <strong>threadcommand.center</strong></li>
+                        <li>✅ Button stays clickable when embedded</li>
+                        <li>✅ Looks like an image but behaves like a mini-app</li>
+                        <li>✅ Great for scheduling and template creation</li>
+                    </ul>
                 </div>
             </div>
 
@@ -85,6 +208,7 @@
                 </div>
                 <div class="preview-info">
                     <p>Preview updates automatically as you type</p>
+                    <p><small>💡 <strong>Tip:</strong> Click the "GO IN" button in the preview to test functionality!</small></p>
                 </div>
             </div>
         </div>
@@ -92,10 +216,10 @@
         <!-- Footer -->
         <footer class="footer">
             <p>&copy; 2025 3C Thread To Success. Built with ❤️ for creators.</p>
+            <p><small>Interactive posts powered by HTML5 Canvas & JavaScript</small></p>
         </footer>
     </div>
 
     <script src="script.js"></script>
 </body>
 </html>
-
