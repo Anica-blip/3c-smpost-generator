@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3C Social Media Post Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Livvic:wght@700&family=Inter:wght@700&family=Arimo:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>3C Social Media Post Generator</h1>
+            <p>Create stunning social media cards for your 3C content</p>
+        </header>
 
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Input Form -->
+            <div class="form-section">
+                <h2>Create Your Post</h2>
+                
+                <div class="form-group">
+                    <label for="contentType">Content Type:</label>
+                    <select id="contentType" class="form-control">
+                        <option value="Quiz">Quiz</option>
+                        <option value="Game">Game</option>
+                        <option value="Puzzle">Puzzle</option>
+                        <option value="Challenge">Challenge</option>
+                        <option value="Assessment">Assessment</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Course">Course</option>
+                        <option value="Tool">Tool</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" class="form-control" placeholder="What's Your Emotional Intelligence Superpower?" maxlength="80">
+                    <small>Max 80 characters for best mobile display</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description (Auto-generated):</label>
+                    <textarea id="description" class="form-control" rows="3" placeholder="Description will be generated automatically..."></textarea>
+                    <button type="button" id="generateDesc" class="btn-secondary">Generate Description</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="linkUrl">Link URL:</label>
+                    <select id="linkType" class="form-control" style="margin-bottom: 10px;">
+                        <option value="landing">3C Landing Page</option>
+                        <option value="custom">Custom URL</option>
+                        <option value="canva">Canva</option>
+                        <option value="notion">Notion</option>
+                    </select>
+                    <input type="url" id="linkUrl" class="form-control" placeholder="https://anica-blip.github.io/3c-quiz-admin/landing.html?quiz=quiz.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="imageSize">Image Size:</label>
+                    <select id="imageSize" class="form-control">
+                        <option value="instagram-square">Instagram Square (1080x1080)</option>
+                        <option value="instagram-story">Instagram Story (1080x1920)</option>
+                        <option value="facebook-post">Facebook Post (1200x630)</option>
+                        <option value="twitter-post">Twitter Post (1200x675)</option>
+                        <option value="linkedin-post">LinkedIn Post (1200x627)</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="generatePost" class="btn-primary">Generate Post</button>
+                    <button type="button" id="downloadPost" class="btn-secondary" disabled>Download Image</button>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <h2>Preview</h2>
+                <div class="canvas-container">
+                    <canvas id="previewCanvas"></canvas>
+                </div>
+                <div class="preview-info">
+                    <p>Preview updates automatically as you type</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 3C Thread To Success. Built with ❤️ for creators.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
