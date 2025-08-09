@@ -420,7 +420,7 @@ class SocialMediaGenerator {
         
         // Brand name in navy
         const line1 = '3C Thread To Success';
-        ctx.fillStyle = '#061244';
+        ctx.fillStyle = '#997a64';
         ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`;
         ctx.fillText(line1, x, y);
         
