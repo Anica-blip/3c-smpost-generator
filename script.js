@@ -28,12 +28,13 @@ class SocialMediaGenerator {
     async loadAssets() {
         try {
             // Load background image
-            this.backgroundImage = await this.loadImage('assets/7.png');
+            this.backgroundImage = await this.loadImage('./assets/7.png');
             
             // Load logo
-            this.logoImage = await this.loadImage('assets/logo.png');
+            this.logoImage = await this.loadImage('./assets/logo.png');
             
             console.log('Assets loaded successfully');
+            this.updatePreview(); // Refresh preview once images load
         } catch (error) {
             console.warn('Some assets failed to load:', error);
             // Continue without assets - will use fallback colors
@@ -68,6 +69,12 @@ class SocialMediaGenerator {
 
         // Download post
         this.downloadBtn.addEventListener('click', () => this.downloadImage());
+        
+        // Canvas click handler for button
+        this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+        
+        // Add cursor pointer on button hover
+        this.canvas.addEventListener('mousemove', (e) => this.handleCanvasHover(e));
     }
 
     handleLinkTypeChange() {
@@ -395,6 +402,14 @@ class SocialMediaGenerator {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('GO IN', x, y);
+        
+        // Store button coordinates for click detection
+        this.buttonBounds = {
+            x: x - width / 2,
+            y: y - height / 2,
+            width: width,
+            height: height
+        };
     }
 
     drawContactInfo(x, y, fontSize) {
@@ -479,9 +494,77 @@ class SocialMediaGenerator {
             }, 2000);
         });
     }
+    
+    handleCanvasClick(e) {
+        if (!this.buttonBounds) return;
+        
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        
+        // Check if click is within button bounds
+        if (x >= this.buttonBounds.x && 
+            x <= this.buttonBounds.x + this.buttonBounds.width &&
+            y >= this.buttonBounds.y && 
+            y <= this.buttonBounds.y + this.buttonBounds.height) {
+            
+            this.openLandingPage();
+        }
+    }
+    
+    handleCanvasHover(e) {
+        if (!this.buttonBounds) return;
+        
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        
+        // Check if hover is over button
+        if (x >= this.buttonBounds.x && 
+            x <= this.buttonBounds.x + this.buttonBounds.width &&
+            y >= this.buttonBounds.y && 
+            y <= this.buttonBounds.y + this.buttonBounds.height) {
+            
+            this.canvas.style.cursor = 'pointer';
+        } else {
+            this.canvas.style.cursor = 'default';
+        }
+    }
+    
+    openLandingPage() {
+        let url = this.linkUrl.value;
+        
+        // If no URL provided, use default based on link type
+        if (!url) {
+            const linkType = this.linkType.value;
+            switch (linkType) {
+                case 'landing':
+                    url = 'https://anica-blip.github.io/3c-quiz-admin/landing.html?quiz=quiz.01';
+                    break;
+                case 'canva':
+                    url = 'https://canva.com';
+                    break;
+                case 'notion':
+                    url = 'https://notion.so';
+                    break;
+                default:
+                    url = 'https://www.3c-innergrowth.com';
+            }
+        }
+        
+        // Open in new tab
+        window.open(url, '_blank');
+    }
 }
 
 // Initialize the generator when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     new SocialMediaGenerator();
 });
+
