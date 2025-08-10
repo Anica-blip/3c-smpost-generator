@@ -445,50 +445,52 @@ class SocialMediaGenerator {
         const canvas = this.canvas;
         const isSquare = canvas.width === canvas.height;
         const isStory = canvas.height > canvas.width;
+        const isLandscape = canvas.width > canvas.height;
         
         let logoSize, logoY, contentTypeY, titleY, descY, buttonY, contactY;
         let titleFontSize, descFontSize, contentTypeFontSize;
         
-        // Responsive sizing based on canvas dimensions
+        // IMPROVED: Better responsive sizing with more space management
         if (isStory) {
             // Instagram Story layout
-            logoSize = canvas.width * 0.15;
-            logoY = canvas.height * 0.1;
-            contentTypeY = logoY + logoSize + (canvas.height * 0.08);
-            titleY = contentTypeY + (canvas.height * 0.1);
-            descY = titleY + (canvas.height * 0.25);
-            buttonY = canvas.height * 0.75;
-            contactY = canvas.height * 0.85;
-            
-            titleFontSize = Math.floor(canvas.width * 0.06);
-            descFontSize = Math.floor(canvas.width * 0.035);
-            contentTypeFontSize = Math.floor(canvas.width * 0.04);
-        } else if (isSquare) {
-            // Instagram Square layout
             logoSize = canvas.width * 0.12;
             logoY = canvas.height * 0.08;
-            contentTypeY = logoY + logoSize + (canvas.height * 0.06);
-            titleY = contentTypeY + (canvas.height * 0.08);
-            descY = titleY + (canvas.height * 0.2);
-            buttonY = canvas.height * 0.72;
-            contactY = canvas.height * 0.85;
-            
-            titleFontSize = Math.floor(canvas.width * 0.05);
-            descFontSize = Math.floor(canvas.width * 0.032);
-            contentTypeFontSize = Math.floor(canvas.width * 0.035);
-        } else {
-            // Landscape layout (Facebook, Twitter, LinkedIn)
-            logoSize = canvas.height * 0.2;
-            logoY = canvas.height * 0.1;
             contentTypeY = logoY + logoSize + (canvas.height * 0.05);
-            titleY = contentTypeY + (canvas.height * 0.08);
-            descY = titleY + (canvas.height * 0.2);
+            titleY = contentTypeY + (canvas.height * 0.06);
+            descY = titleY + (canvas.height * 0.18);
             buttonY = canvas.height * 0.75;
+            contactY = canvas.height * 0.87;
+            
+            titleFontSize = Math.floor(canvas.width * 0.055);
+            descFontSize = Math.floor(canvas.width * 0.032);
+            contentTypeFontSize = Math.floor(canvas.width * 0.038);
+        } else if (isSquare) {
+            // Instagram Square layout - IMPROVED spacing
+            logoSize = canvas.width * 0.10;
+            logoY = canvas.height * 0.06;
+            contentTypeY = logoY + logoSize + (canvas.height * 0.04);
+            titleY = contentTypeY + (canvas.height * 0.06);
+            descY = titleY + (canvas.height * 0.16);
+            buttonY = canvas.height * 0.75;
+            contactY = canvas.height * 0.87;
+            
+            titleFontSize = Math.floor(canvas.width * 0.045);
+            descFontSize = Math.floor(canvas.width * 0.028);
+            contentTypeFontSize = Math.floor(canvas.width * 0.032);
+        } else {
+            // Landscape layout (Facebook, Twitter, LinkedIn) - MAJOR IMPROVEMENTS
+            logoSize = canvas.height * 0.15;
+            logoY = canvas.height * 0.08;
+            contentTypeY = logoY + logoSize + (canvas.height * 0.03);
+            titleY = contentTypeY + (canvas.height * 0.05);
+            descY = titleY + (canvas.height * 0.12);
+            buttonY = canvas.height * 0.72;
             contactY = canvas.height * 0.9;
             
-            titleFontSize = Math.floor(canvas.height * 0.08);
-            descFontSize = Math.floor(canvas.height * 0.045);
-            contentTypeFontSize = Math.floor(canvas.height * 0.05);
+            // FIXED: Much better font sizing for landscape formats
+            titleFontSize = Math.floor(canvas.height * 0.06);
+            descFontSize = Math.floor(canvas.height * 0.035);
+            contentTypeFontSize = Math.floor(canvas.height * 0.04);
         }
         
         // Draw logo
@@ -507,7 +509,7 @@ class SocialMediaGenerator {
         this.drawButton(canvas.width / 2, buttonY, canvas.width * 0.4);
         
         // Draw contact info
-        this.drawContactInfo(canvas.width / 2, contactY, Math.floor(canvas.width * 0.025));
+        this.drawContactInfo(canvas.width / 2, contactY, Math.floor(canvas.width * 0.022));
     }
 
     drawLogo(x, y, size) {
@@ -582,7 +584,7 @@ class SocialMediaGenerator {
         ctx.shadowColor = '#a49079';
         ctx.shadowBlur = 20;
         
-        this.wrapText(ctx, title, x, y, maxWidth, fontSize * 1.2);
+        this.wrapText(ctx, title, x, y, maxWidth, fontSize * 1.1);
         
         // Reset shadow
         ctx.shadowBlur = 0;
@@ -597,7 +599,8 @@ class SocialMediaGenerator {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         
-        this.wrapText(ctx, description, x, y, maxWidth, fontSize * 1.4);
+        // IMPROVED: Better line height for descriptions
+        this.wrapText(ctx, description, x, y, maxWidth, fontSize * 1.3);
     }
 
     drawButton(x, y, width) {
@@ -803,4 +806,3 @@ class SocialMediaGenerator {
 document.addEventListener('DOMContentLoaded', () => {
     new SocialMediaGenerator();
 });
-
