@@ -6,6 +6,94 @@
     <title>3C Social Media Post Generator</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Livvic:wght@700&family=Inter:wght@700&family=Arimo:wght@700&display=swap" rel="stylesheet">
+    
+    <script>
+    // Add meta tags for URL preview functionality
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const title = decodeURIComponent(urlParams.get('title') || '🔥 Interactive Content');
+        const desc = decodeURIComponent(urlParams.get('desc') || 'Engage with this interactive content');
+        const type = urlParams.get('type') || 'Quiz';
+        
+        // Only add meta tags if URL has parameters (shared post)
+        if (urlParams.has('title') || urlParams.has('desc')) {
+            document.title = title + ' | 3C Thread To Success';
+            
+            // Create meta tags for URL preview
+            const metaTags = [
+                { property: 'og:title', content: title },
+                { property: 'og:description', content: desc },
+                { property: 'og:type', content: 'website' },
+                { property: 'og:site_name', content: '3C Thread To Success' },
+                { name: 'twitter:card', content: 'summary_large_image' },
+                { name: 'description', content: desc }
+            ];
+            
+            // Generate preview image URL
+            const baseUrl = window.location.origin + window.location.pathname;
+            const imageUrl = baseUrl + '?preview=image&type=' + encodeURIComponent(type) + '&title=' + encodeURIComponent(title) + '&desc=' + encodeURIComponent(desc);
+            
+            metaTags.push(
+                { property: 'og:image', content: imageUrl },
+                { name: 'twitter:image', content: imageUrl }
+            );
+            
+            // Add to document head
+            metaTags.forEach(tag => {
+                const meta = document.createElement('meta');
+                if (tag.property) meta.setAttribute('property', tag.property);
+                if (tag.name) meta.setAttribute('name', tag.name);
+                meta.setAttribute('content', tag.content);
+                document.head.appendChild(meta);
+            });
+        }
+        
+        // Handle image preview generation
+        if (urlParams.get('preview') === 'image') {
+            window.addEventListener('load', function() {
+                generatePreviewImage(type, title, desc);
+            });
+        }
+    })();
+    
+    function generatePreviewImage(type, title, desc) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 1200;
+        canvas.height = 630;
+        
+        // Purple gradient background
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, '#8B5CF6');
+        gradient.addColorStop(1, '#3B82F6');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw title
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(title, canvas.width/2, 250);
+        
+        // Draw description
+        ctx.font = '24px Arial';
+        ctx.fillText(desc.substring(0, 80), canvas.width/2, 350);
+        
+        // Draw type badge
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillRect(50, 50, 150, 40);
+        ctx.fillStyle = '#8B5CF6';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(type.toUpperCase(), 60, 75);
+        
+        // Replace page with image
+        canvas.toBlob(function(blob) {
+            document.body.innerHTML = '<img src="' + URL.createObjectURL(blob) + '" style="width:100%;height:100%;object-fit:contain;">';
+        }, 'image/png');
+    }
+    </script>
+    
     <style>
         /* Additional styles for the new button */
         .btn-forward {
@@ -184,7 +272,7 @@
                 <div class="form-actions">
                     <button type="button" id="generatePost" class="btn-primary">Generate Post</button>
                     <button type="button" id="sharePost" class="btn-secondary">Share URL</button>
-                    <button type="button" id="forwardPost" class="btn-forward">📤 Forward as Interactive Post</button>
+                    <button type="button" id="forwardPost" class="btn-forward">🔤 Forward as Interactive Post</button>
                     <button type="button" id="downloadPost" class="btn-secondary" disabled>Download Image</button>
                 </div>
                 
