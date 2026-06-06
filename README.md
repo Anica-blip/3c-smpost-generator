@@ -1,5 +1,7 @@
 # 3C Social Media Post Generator
 
+> ⚖️ This repository is protected under a binding [Legal Disclaimer](./LEGAL_DISCLAIMER.md) that governs all use, cloning, and forking from the date of inception. Please read before use.
+
 The 3C Social Media Post Generator is your open-source tool for crafting high-impact, scroll-stopping posts in minutes. Built for the 3C brand voice, it blends creativity, clarity, and connection — helping creators, teams, and communities turn ideas into content that inspires action.
 
 ## 🚀 Features
